@@ -8,17 +8,23 @@ import 'providers/auth_provider.dart';
 import 'providers/service_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/referral_provider.dart';
+import 'providers/wallet_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/auth/auth_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // مقداردهی سوپابیس با اطلاعات واقعی پروژه شما
-  await Supabase.initialize(
-    url: 'https://jhjhvwvpebexhlfnmveh.supabase.co',
-    publishableKey: 'sb_publishable_JDRwWMcVCSviyQd_3Bfo-w_eeNrynQK',
-  );
+  try {
+    // مقداردهی سوپابیس با اطلاعات واقعی پروژه شما
+    await Supabase.initialize(
+      url: 'https://jhjhvwvpebexhlfnmveh.supabase.co',
+      anonKey: 'sb_publishable_JDRwWMcVCSviyQd_3Bfo-w_eeNrynQK',
+    );
+  } catch (e) {
+    debugPrint("Supabase Initialization Error: $e");
+    // اگر سوپابیس وصل نشد، برنامه باز شود اما در لاگ نمایش دهد
+  }
 
   runApp(
     MultiProvider(
@@ -53,7 +59,10 @@ class DidinoApp extends StatelessWidget {
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (!auth.isInitialized) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            return const Scaffold(
+              backgroundColor: Color(0xFF0F0F0F),
+              body: Center(child: CircularProgressIndicator(color: Color(0xFF6C63FF))),
+            );
           }
           return auth.isAuthenticated ? const HomeScreen() : const AuthScreen();
         },
