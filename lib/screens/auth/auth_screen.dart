@@ -13,9 +13,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _otpController = TextEditingController();
   bool _isLoading = false;
-  bool _showOtpField = false;
 
   @override
   Widget build(BuildContext context) {
@@ -27,54 +25,39 @@ class _AuthScreenState extends State<AuthScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               children: [
-                const Icon(Icons.email_outlined, size: 80, color: AppColors.primary),
+                const Icon(Icons.login_rounded, size: 80, color: AppColors.primary),
                 const SizedBox(height: 24),
-                Text(
-                  _showOtpField ? 'تایید کد' : 'ورود با ایمیل',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                const Text(
+                  'ورود به برنامه',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  _showOtpField 
-                      ? 'کد ۶ رقمی به ایمیل ${_emailController.text} ارسال شد'
-                      : 'کد ورود به ایمیل شما ارسال خواهد شد',
+                const Text(
+                  'لطفاً اطلاعات خود را برای ورود وارد کنید',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white38, fontSize: 13),
+                  style: TextStyle(color: Colors.white38, fontSize: 13),
                 ),
                 const SizedBox(height: 40),
-                if (!_showOtpField) ...[
-                  _buildTextField(_nameController, 'نام کامل', Icons.person_outline, TextInputType.name),
-                  const SizedBox(height: 20),
-                  _buildTextField(_emailController, 'آدرس ایمیل (Gmail)', Icons.alternate_email, TextInputType.emailAddress),
-                ] else ...[
-                  _buildTextField(_otpController, 'کد تایید', Icons.lock_outline, TextInputType.number),
-                ],
+                _buildTextField(_nameController, 'نام کامل', Icons.person_outline, TextInputType.name),
+                const SizedBox(height: 20),
+                _buildTextField(_emailController, 'آدرس ایمیل', Icons.alternate_email, TextInputType.emailAddress),
                 const SizedBox(height: 40),
                 _isLoading 
                   ? const CircularProgressIndicator(color: AppColors.primary)
-                  : Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 55,
-                          child: ElevatedButton(
-                            onPressed: _showOtpField ? _handleVerifyOtp : _handleSendOtp,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                            ),
-                            child: Text(
-                              _showOtpField ? 'تایید و ورود' : 'ارسال کد ورود',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                          ),
+                  : SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: _handleLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                         ),
-                        if (_showOtpField) 
-                          TextButton(
-                            onPressed: () => setState(() => _showOtpField = false),
-                            child: const Text('تغییر ایمیل', style: TextStyle(color: AppColors.primary)),
-                          ),
-                      ],
+                        child: const Text(
+                          'ورود مستقیم',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
                     ),
               ],
             ),
@@ -100,33 +83,21 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  void _handleSendOtp() async {
-    if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لطفاً یک ایمیل معتبر وارد کنید')));
+  void _handleLogin() async {
+    if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لطفاً نام و ایمیل را وارد کنید')));
       return;
     }
     setState(() => _isLoading = true);
     try {
-      await Provider.of<AuthProvider>(context, listen: false).sendOtp(_emailController.text, _nameController.text);
-      setState(() => _showOtpField = true);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('کد تایید ارسال شد 📧')));
+      await Provider.of<AuthProvider>(context, listen: false).loginDirectly(
+        _nameController.text, 
+        _emailController.text
+      );
+      // پس از متد loginDirectly، چون notifyListeners صدا زده می‌شود،
+      // MaterialApp در main.dart متوجه شده و HomeScreen را نشان می‌دهد.
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطا: $e')));
-    }
-    setState(() => _isLoading = false);
-  }
-
-  void _handleVerifyOtp() async {
-    if (_otpController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لطفاً کد ۶ رقمی را وارد کنید')));
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      await Provider.of<AuthProvider>(context, listen: false).verifyOtp(_emailController.text, _otpController.text);
-      // پس از تایید موفق، AuthProvider وضعیت را تغییر می‌دهد و main.dart کاربر را به HomeScreen می‌برد
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('کد نامعتبر است یا منقضی شده: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطا در ورود: $e')));
     }
     setState(() => _isLoading = false);
   }

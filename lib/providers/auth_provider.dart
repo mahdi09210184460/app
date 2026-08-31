@@ -47,6 +47,30 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loginDirectly(String name, String email) async {
+    try {
+      // برای ورود مستقیم و سریع، فعلاً وضعیت کاربر را به صورت محلی تنظیم می‌کنیم
+      UserRole role = UserRole.user;
+      if (email == 'amin1391soltani@gmail.com') {
+        role = UserRole.admin;
+      }
+
+      _user = AppUser(
+        id: 'temp-id-${DateTime.now().millisecondsSinceEpoch}',
+        name: name,
+        email: email,
+        role: role,
+      );
+      _isInitialized = true;
+      notifyListeners();
+      
+      // اختیاری: می‌توانید اینجا یک ورود ناشناس به سوپابیس هم بزنید تا سشن داشته باشید
+      // await _supabase.auth.signInAnonymously();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> sendOtp(String email, String name) async {
     try {
       // ارسال کد ورود به ایمیل (OTP)
