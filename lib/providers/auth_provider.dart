@@ -47,13 +47,25 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> registerAndLogin(String name, String email) async {
+  Future<void> sendOtp(String email, String name) async {
     try {
-      // ارسال لینک ورود به ایمیل (Magic Link)
-      // کاربر با کلیک روی لینک در ایمیلش مستقیماً وارد برنامه می‌شود
+      // ارسال کد ورود به ایمیل (OTP)
       await _supabase.auth.signInWithOtp(
         email: email,
         data: {'full_name': name},
+        shouldCreateUser: true,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> verifyOtp(String email, String token) async {
+    try {
+      await _supabase.auth.verifyOTP(
+        email: email,
+        token: token,
+        type: OtpType.email,
       );
     } catch (e) {
       rethrow;
