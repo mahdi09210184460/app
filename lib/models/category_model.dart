@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ServiceCategory {
   final String id;
   final String title;
-  final IconData icon;
+  final dynamic icon; // Changed from IconData to dynamic to support FaIconData
   final Color color;
 
   ServiceCategory({
