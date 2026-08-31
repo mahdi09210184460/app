@@ -9,7 +9,7 @@ class AuthProvider with ChangeNotifier {
 
   AppUser? get user => _user;
   bool get isAuthenticated => _user != null;
-  bool get isAdmin => _user?.role == UserRole.admin;
+  bool get isAdmin => _user?.email == 'amin1391soltani@gmail.com'; // ایمیل ادمین
   bool get isInitialized => _isInitialized;
 
   AuthProvider() {
@@ -17,13 +17,12 @@ class AuthProvider with ChangeNotifier {
   }
 
   void _init() {
-    // گوش دادن به تغییرات وضعیت احراز هویت در سوپابیس
     _supabase.auth.onAuthStateChange.listen((data) {
       final Session? session = data.session;
       final User? user = session?.user;
 
       if (user != null) {
-        _fetchUserProfile(user.id, user.userMetadata?['full_name'] ?? 'کاربر', user.phone ?? '');
+        _fetchUserProfile(user.id, user.userMetadata?['full_name'] ?? 'کاربر', user.email ?? '');
       } else {
         _user = null;
         _isInitialized = true;
@@ -32,36 +31,30 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
-  Future<void> _fetchUserProfile(String uid, String name, String phone) async {
-    // در اینجا می‌توان پروفایل تکمیلی را از جدول profiles در دیتابیس خواند
-    // فعلاً با اطلاعات سشن کاربر را می‌سازیم
+  Future<void> _fetchUserProfile(String uid, String name, String email) async {
     UserRole role = UserRole.user;
-    if (phone == '09927891608' || phone.contains('9927891608')) {
+    if (email == 'amin1391soltani@gmail.com') {
       role = UserRole.admin;
     }
 
     _user = AppUser(
       id: uid,
       name: name,
-      phoneNumber: phone,
+      phoneNumber: email, // در اینجا فیلد را برای ایمیل استفاده می‌کنیم
       role: role,
     );
     _isInitialized = true;
     notifyListeners();
   }
 
-  Future<void> registerAndLogin(String name, String phone) async {
+  Future<void> registerAndLogin(String name, String email) async {
     try {
-      // استفاده از OTP شماره موبایل سوپابیس
-      // توجه: در حالت توسعه، اگر سرویس پیامکی فعال نباشد، سوپابیس لاگ می‌اندازد
+      // ارسال لینک ورود به ایمیل (Magic Link)
+      // کاربر با کلیک روی لینک در ایمیلش مستقیماً وارد برنامه می‌شود
       await _supabase.auth.signInWithOtp(
-        phone: phone,
+        email: email,
         data: {'full_name': name},
       );
-      
-      // برای این پروژه، چون می‌خواهیم فعلاً مستقیم وارد شویم (بدون تایید واقعی OTP در مرحله تست)
-      // اگر در پنل سوپابیس تیک "Confirm Phone" غیرفعال باشد، ورود مستقیم انجام می‌شود.
-      // در غیر این صورت کاربر باید کد را در مرحله بعد وارد کند.
     } catch (e) {
       rethrow;
     }

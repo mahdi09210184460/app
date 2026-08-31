@@ -12,58 +12,41 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.person_add_alt_1, size: 80, color: AppColors.primary),
-                ),
+                const Icon(Icons.email_outlined, size: 80, color: AppColors.primary),
                 const SizedBox(height: 24),
-                const Text(
-                  'ثبت‌نام در دیدینو',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                ),
+                const Text('ورود با ایمیل', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 8),
-                const Text(
-                  'لطفاً اطلاعات خود را با دقت وارد کنید.\nاین اطلاعات بعداً قابل تغییر نیست.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
-                ),
+                const Text('لینک ورود به ایمیل شما ارسال خواهد شد', textAlign: TextAlign.center, style: TextStyle(color: Colors.white38, fontSize: 13)),
                 const SizedBox(height: 40),
-                _buildTextField(_nameController, 'نام و نام خانوادگی', Icons.person_outline, TextInputType.name),
+                _buildTextField(_nameController, 'نام کامل', Icons.person_outline, TextInputType.name),
                 const SizedBox(height: 20),
-                _buildTextField(_phoneController, 'شماره موبایل', Icons.phone_android, TextInputType.phone),
+                _buildTextField(_emailController, 'آدرس ایمیل (Gmail)', Icons.alternate_email, TextInputType.emailAddress),
                 const SizedBox(height: 40),
                 _isLoading 
-                  ? const CircularProgressIndicator()
+                  ? const CircularProgressIndicator(color: AppColors.primary)
                   : SizedBox(
                       width: double.infinity,
                       height: 55,
                       child: ElevatedButton(
-                        onPressed: _handleRegister,
+                        onPressed: _handleAuth,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 5,
-                          shadowColor: AppColors.primary.withOpacity(0.5),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                         ),
-                        child: const Text('تایید و ورود', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: const Text('ارسال لینک ورود', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                       ),
                     ),
               ],
@@ -78,33 +61,30 @@ class _AuthScreenState extends State<AuthScreen> {
     return TextField(
       controller: controller,
       keyboardType: type,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: Colors.white38),
         prefixIcon: Icon(icon, color: AppColors.primary),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
+        filled: true,
+        fillColor: AppColors.cardBg,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
       ),
     );
   }
 
-  void _handleRegister() async {
-    if (_nameController.text.isEmpty || _phoneController.text.length < 11) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لطفاً نام و شماره موبایل صحیح را وارد کنید')),
-      );
+  void _handleAuth() async {
+    if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لطفاً یک ایمیل معتبر وارد کنید')));
       return;
     }
-
     setState(() => _isLoading = true);
-    await Provider.of<AuthProvider>(context, listen: false)
-        .registerAndLogin(_nameController.text, _phoneController.text);
+    try {
+      await Provider.of<AuthProvider>(context, listen: false).registerAndLogin(_nameController.text, _emailController.text);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لینک ورود ارسال شد. ایمیل خود را چک کنید 📧')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطا: $e')));
+    }
     setState(() => _isLoading = false);
   }
 }
