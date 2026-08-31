@@ -6,7 +6,6 @@ import '../providers/wallet_provider.dart';
 import '../screens/lottery_screen.dart';
 import '../screens/admin/admin_panel_screen.dart';
 import '../screens/referral_screen.dart';
-import '../screens/about_screen.dart';
 import '../screens/transaction_history_screen.dart';
 import '../screens/support_screen.dart';
 
@@ -67,7 +66,7 @@ class _AppDrawerState extends State<AppDrawer> {
               _adminClickCount++;
               if (_adminClickCount >= 3) {
                 _adminClickCount = 0;
-                _showAdminPasswordDialog(context, user?.phoneNumber);
+                _showAdminPasswordDialog(context, user?.email);
               }
             },
             child: const ListTile(
@@ -102,7 +101,7 @@ class _AppDrawerState extends State<AppDrawer> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              if (phone == '09927891608' && passwordC.text == 'amin1391soltani') {
+              if (phone == 'amin1391soltani@gmail.com' && passwordC.text == 'amin1391soltani') {
                 Navigator.pop(context);
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPanelScreen()));
               } else {

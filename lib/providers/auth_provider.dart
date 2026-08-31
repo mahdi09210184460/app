@@ -40,7 +40,7 @@ class AuthProvider with ChangeNotifier {
     _user = AppUser(
       id: uid,
       name: name,
-      phoneNumber: email, // در اینجا فیلد را برای ایمیل استفاده می‌کنیم
+      email: email,
       role: role,
     );
     _isInitialized = true;
